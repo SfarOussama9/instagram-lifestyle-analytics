@@ -1,0 +1,4 @@
+backend/app/artifacts/*
+!backend/app/artifacts/.gitkeep
+frontend/.next/
+frontend/node_modules/
