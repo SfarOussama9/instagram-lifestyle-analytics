@@ -7,6 +7,7 @@ import { ChartCard } from "../../components/chart-card";
 import { EChart } from "../../components/echart";
 import { SectionHero } from "../../components/section-hero";
 import { getAdvanced, type AdvancedPayload } from "../../lib/api";
+import { addVisualSpread, getValueExtent, pickHighlightedKeys } from "../../lib/scatter-helpers";
 
 function formatSummaryLabel(key: string) {
   return key
@@ -49,6 +50,35 @@ export default function AdvancedPage() {
     );
   }
 
+  const geographyStressExtent = getValueExtent(
+    advanced.country_analysis.map((row) => Number(row.avg_stress)),
+    { minimumPad: 1.2, precision: 1 },
+  );
+  const geographyHappinessExtent = getValueExtent(
+    advanced.country_analysis.map((row) => Number(row.avg_happiness)),
+    { minimumPad: 0.25, precision: 2 },
+  );
+  const geographyPoints = addVisualSpread(
+    advanced.country_analysis.map((row) => ({
+      key: String(row.country),
+      country: String(row.country),
+      x: Number(row.avg_stress),
+      y: Number(row.avg_happiness),
+      size: Number(row.user_count),
+    })),
+    Math.max(0.12, (geographyStressExtent.max - geographyStressExtent.min) * 0.012),
+    Math.max(0.05, (geographyHappinessExtent.max - geographyHappinessExtent.min) * 0.012),
+  );
+  const highlightedGeographyKeys = pickHighlightedKeys(geographyPoints, 6);
+  const geographyData = geographyPoints.map((point) => ({
+    name: point.country,
+    country: point.country,
+    size: point.size,
+    actualStress: point.x,
+    actualHappiness: point.y,
+    value: [point.plottedX, point.plottedY, point.size],
+  }));
+
   const cohortOption: EChartsOption = {
     backgroundColor: "transparent",
     tooltip: { trigger: "axis" },
@@ -76,24 +106,50 @@ export default function AdvancedPage() {
     tooltip: {
       trigger: "item",
       formatter: (params: any) => {
-        const value = Array.isArray(params?.value) ? params.value : [];
-        return `${String(params?.name ?? "Country")}<br/>Stress: ${Number(value[0] ?? 0).toFixed(2)}<br/>Happiness: ${Number(value[1] ?? 0).toFixed(2)}<br/>Users: ${Number(value[2] ?? 0).toLocaleString()}`;
+        const row = params?.data;
+        return `${String(row?.country ?? params?.name ?? "Country")}<br/>Stress: ${Number(row?.actualStress ?? 0).toFixed(2)}<br/>Happiness: ${Number(row?.actualHappiness ?? 0).toFixed(2)}<br/>Users: ${Number(row?.size ?? 0).toLocaleString()}`;
       },
     },
-    xAxis: { type: "value", name: "Stress", axisLabel: { color: "#7A7A88" }, splitLine: { lineStyle: { color: "rgba(17,17,27,0.06)" } } },
-    yAxis: { type: "value", name: "Happiness", axisLabel: { color: "#7A7A88" }, splitLine: { lineStyle: { color: "rgba(17,17,27,0.06)" } } },
+    xAxis: {
+      type: "value",
+      name: "Stress",
+      min: geographyStressExtent.min,
+      max: geographyStressExtent.max,
+      axisLabel: { color: "#7A7A88" },
+      splitLine: { lineStyle: { color: "rgba(17,17,27,0.06)" } },
+    },
+    yAxis: {
+      type: "value",
+      name: "Happiness",
+      min: geographyHappinessExtent.min,
+      max: geographyHappinessExtent.max,
+      axisLabel: { color: "#7A7A88" },
+      splitLine: { lineStyle: { color: "rgba(17,17,27,0.06)" } },
+    },
     series: [
       {
         type: "scatter",
-        data: advanced.country_analysis.map((row) => [Number(row.avg_stress), Number(row.avg_happiness), Number(row.user_count)]),
+        data: geographyData,
         symbolSize: (value) => Math.max(10, Math.min(30, Math.sqrt(Number((value as number[])[2])) / 6)),
         itemStyle: { color: "#DD2A7B", opacity: 0.7 },
+        emphasis: { scale: true },
+      },
+      {
+        type: "scatter",
+        data: geographyData.filter((point) => highlightedGeographyKeys.has(point.country)),
+        symbolSize: (value) => Math.max(12, Math.min(34, Math.sqrt(Number((value as number[])[2])) / 5.5)),
+        itemStyle: { color: "rgba(221,42,123,0.92)", borderColor: "#FFFFFF", borderWidth: 2 },
         label: {
           show: true,
           position: "top",
+          distance: 6,
           color: "#7A7A88",
-          formatter: (_params) => advanced.country_analysis[_params.dataIndex]?.country as string,
+          backgroundColor: "rgba(255,255,255,0.9)",
+          borderRadius: 999,
+          padding: [3, 6],
+          formatter: (params: any) => String(params.data.country),
         },
+        labelLayout: { hideOverlap: true, moveOverlap: "shiftY" },
       },
     ],
   };

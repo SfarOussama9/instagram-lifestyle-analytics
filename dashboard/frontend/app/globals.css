@@ -89,6 +89,7 @@ a {
 
 .shell-panel {
   position: relative;
+  min-width: 0;
   background: linear-gradient(180deg, #FFFFFF 0%, #FFFBF7 100%);
   border: 1px solid var(--hairline);
   box-shadow: 0 18px 60px -28px rgba(17, 17, 27, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -116,6 +117,7 @@ a {
 
 .surface-panel {
   position: relative;
+  min-width: 0;
   overflow: hidden;
   border-radius: 30px;
   border: 1px solid var(--hairline);

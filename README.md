@@ -17,11 +17,17 @@ This repository contains two deliverables for the project:
 
 The original file `instagram_users_lifestyle.csv` is about 419 MB, which is too large for a normal GitHub repository.
 
+Download the full dataset from Kaggle here: <https://www.kaggle.com/datasets/rockyt07/social-media-user-analysis>. After downloading and extracting it, place the CSV in the project root as:
+
+```text
+instagram_users_lifestyle.csv
+```
+
 Because of that:
 
 - the repository is designed to run with the bundled `instagram_users_lifestyle_sample_10000_engineered.csv` by default if the full dataset is missing;
 - if you want to reproduce the full-scale analysis exactly, place the original `instagram_users_lifestyle.csv` in the project root, or point the app to it with the `INSTAGRAM_DATASET_PATH` environment variable;
-- if the team wants to version the large file itself, use Git LFS or share the CSV separately through Drive/OneDrive.
+- do not commit the full CSV to GitHub; it is ignored by `.gitignore` and should be downloaded separately from Kaggle when needed.
 
 ## Recommended Versions
 
@@ -140,6 +146,8 @@ Then open `test.ipynb` and select the `.venv` Python kernel.
 The notebook now tries the full dataset first and falls back to the bundled sample dataset automatically when the full CSV is not available.
 
 ## Using The Full Dataset Instead Of The Sample
+
+Download the dataset from Kaggle: <https://www.kaggle.com/datasets/rockyt07/social-media-user-analysis>. Extract the archive and make sure the full CSV is named `instagram_users_lifestyle.csv`.
 
 ### Option A: put the full file in the project root
 

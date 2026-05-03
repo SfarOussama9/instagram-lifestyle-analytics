@@ -16,7 +16,7 @@ export function EChart({ option, height = 320, className }: Props) {
       notMerge
       lazyUpdate
       className={className}
-      style={{ height, width: "100%" }}
+      style={{ height, width: "100%", minWidth: 0 }}
       opts={{ renderer: "canvas" }}
     />
   );

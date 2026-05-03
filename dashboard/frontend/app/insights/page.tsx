@@ -7,6 +7,7 @@ import { AlertTriangle, Brain, ChevronRight, Flame, Heart, Users } from "lucide-
 import { EChart } from "../../components/echart";
 import { AnimatedCounter } from "../../components/animated-counter";
 import { FadeIn, MotionDiv, StaggerChildren, staggerItemVariants } from "../../components/motion";
+import { addVisualSpread, getValueExtent, pickHighlightedKeys } from "../../lib/scatter-helpers";
 import {
   getAdvanced,
   getClusters,
@@ -108,17 +109,47 @@ export default function InsightsPage() {
 
   // Behavior × wellbeing scatter — uses country_analysis as bubble markers
   const scatter = (advanced?.country_analysis ?? []).slice(0, 20);
+  const scatterMinutesExtent = getValueExtent(
+    scatter.map((row) => Number(row.avg_minutes)),
+    { minimumPad: 2, precision: 1 },
+  );
+  const scatterHappinessExtent = getValueExtent(
+    scatter.map((row) => Number(row.avg_happiness)),
+    { minimumPad: 0.25, precision: 2 },
+  );
+  const scatterPoints = addVisualSpread(
+    scatter.map((row) => ({
+      key: String(row.country),
+      country: String(row.country),
+      x: Number(row.avg_minutes),
+      y: Number(row.avg_happiness),
+      size: Number(row.avg_stress),
+    })),
+    Math.max(0.18, (scatterMinutesExtent.max - scatterMinutesExtent.min) * 0.014),
+    Math.max(0.04, (scatterHappinessExtent.max - scatterHappinessExtent.min) * 0.012),
+  );
+  const highlightedScatterKeys = pickHighlightedKeys(scatterPoints, 5);
+  const scatterData = scatterPoints.map((point) => ({
+    name: point.country,
+    country: point.country,
+    stress: point.size,
+    actualMinutes: point.x,
+    actualHappiness: point.y,
+    value: [point.plottedX, point.plottedY, point.size],
+  }));
   const scatterOption: EChartsOption = {
     backgroundColor: "transparent",
     grid: { left: 10, right: 10, top: 14, bottom: 40, containLabel: true },
     tooltip: {
       trigger: "item",
       formatter: (p: any) =>
-        `<b>${p.data[3]}</b><br/>Minutes: ${p.data[0]}<br/>Happiness: ${p.data[1]}<br/>Stress: ${p.data[2]}`,
+        `<b>${String(p.data.country)}</b><br/>Minutes: ${Number(p.data.actualMinutes).toFixed(1)}<br/>Happiness: ${Number(p.data.actualHappiness).toFixed(2)}<br/>Stress: ${Number(p.data.stress).toFixed(2)}`,
     },
     xAxis: {
       type: "value",
       name: "Avg daily minutes",
+      min: scatterMinutesExtent.min,
+      max: scatterMinutesExtent.max,
       nameGap: 22,
       nameLocation: "middle",
       nameTextStyle: { color: "#7A7A88", fontSize: 10 },
@@ -128,6 +159,8 @@ export default function InsightsPage() {
     yAxis: {
       type: "value",
       name: "Avg happiness",
+      min: scatterHappinessExtent.min,
+      max: scatterHappinessExtent.max,
       nameRotate: 90,
       nameGap: 30,
       nameLocation: "middle",
@@ -139,21 +172,39 @@ export default function InsightsPage() {
       {
         type: "scatter",
         symbolSize: (d: any) => 10 + (Number(d[2]) / 40) * 20,
-        data: scatter.map((r) => [
-          Number(r.avg_minutes),
-          Number(r.avg_happiness),
-          Number(r.avg_stress),
-          String(r.country),
-        ]),
+        data: scatterData,
         itemStyle: {
           color: (p: any) => {
-            const stress = Number(p.data[2]);
+            const stress = Number(p.data.stress);
             const ratio = Math.min(1, stress / 40);
             return `rgba(${Math.round(79 + ratio * (221 - 79))}, ${Math.round(195 - ratio * 153)}, ${Math.round(232 - ratio * 109)}, 0.85)`;
           },
           borderColor: "#FFFFFF",
           borderWidth: 1.5,
         },
+        emphasis: { scale: true },
+      },
+      {
+        type: "scatter",
+        data: scatterData.filter((point) => highlightedScatterKeys.has(point.country)),
+        symbolSize: (d: any) => 12 + (Number(d[2]) / 40) * 20,
+        itemStyle: {
+          color: "rgba(221,42,123,0.92)",
+          borderColor: "#FFFFFF",
+          borderWidth: 2,
+        },
+        label: {
+          show: true,
+          position: "top",
+          distance: 6,
+          color: "#5C5C6B",
+          fontSize: 10,
+          backgroundColor: "rgba(255,255,255,0.88)",
+          borderRadius: 999,
+          padding: [3, 6],
+          formatter: (p: any) => String(p.data.country),
+        },
+        labelLayout: { hideOverlap: true, moveOverlap: "shiftY" },
       },
     ],
   };

@@ -11,7 +11,7 @@ type Props = {
 // Names preserved for compatibility with existing page usage.
 export function KpiCard({ label, value, note, accent = "neutral" }: Props) {
   return (
-    <div className="surface-panel p-5 sm:p-6">
+    <div className="surface-panel min-w-0 p-5 sm:p-6">
       <div
         className={clsx("absolute inset-x-0 top-0 h-1", {
           "bg-gradient-to-r from-[#F58529] to-[#DD2A7B]": accent === "acid",

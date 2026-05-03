@@ -321,7 +321,7 @@ export function UploadLab() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-full space-y-6 overflow-x-hidden">
       <FadeIn>
         <div className="surface-panel relative overflow-hidden p-0">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#F58529] via-[#DD2A7B] to-[#8134AF]" />
@@ -427,7 +427,7 @@ export function UploadLab() {
       {instagramPrediction && (
         <>
           <FadeIn>
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
               <KpiCard
                 label="Rows scored"
                 value={instagramPrediction.summary.rows_scored.toLocaleString()}

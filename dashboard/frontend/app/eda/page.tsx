@@ -9,6 +9,7 @@ import { EChart } from "../../components/echart";
 import { AnimatedCounter } from "../../components/animated-counter";
 import { FadeIn, MotionDiv, StaggerChildren, staggerItemVariants } from "../../components/motion";
 import { HEATMAP_RANGE_IG } from "../../lib/chart-theme";
+import { addVisualSpread, getValueExtent, pickHighlightedKeys } from "../../lib/scatter-helpers";
 import { getAdvanced, getEda, type AdvancedPayload, type EdaPayload } from "../../lib/api";
 
 const GEN_ORDER = ["Gen Alpha", "Gen Z", "Millennial", "Gen X", "Boomer+"];
@@ -87,6 +88,35 @@ export default function EdaPage() {
   const genderTotal = genderEntries.reduce((a, [, v]) => a + Number(v), 0) || 1;
   const totalUsers = Object.values(eda.age_histogram).reduce((a, v) => a + Number(v), 0);
   const avgDaily = Number(eda.usage_metrics.daily_active_minutes_instagram ?? 0);
+  const countryScatter = (advanced?.country_analysis ?? []).slice(0, 20);
+  const countryMinuteExtent = getValueExtent(
+    countryScatter.map((country) => Number(country.avg_minutes)),
+    { minimumPad: 2, precision: 1 },
+  );
+  const countryEngagementExtent = getValueExtent(
+    countryScatter.map((country) => Number(country.avg_engagement)),
+    { minimumPad: 1.5, precision: 1 },
+  );
+  const countryScatterPoints = addVisualSpread(
+    countryScatter.map((country) => ({
+      key: String(country.country),
+      country: String(country.country),
+      x: Number(country.avg_minutes),
+      y: Number(country.avg_engagement),
+      size: Number(country.user_count),
+    })),
+    Math.max(0.18, (countryMinuteExtent.max - countryMinuteExtent.min) * 0.014),
+    Math.max(0.08, (countryEngagementExtent.max - countryEngagementExtent.min) * 0.012),
+  );
+  const highlightedCountryKeys = pickHighlightedKeys(countryScatterPoints, 5);
+  const countryScatterData = countryScatterPoints.map((point) => ({
+    name: point.country,
+    country: point.country,
+    size: point.size,
+    actualMinutes: point.x,
+    actualEngagement: point.y,
+    value: [point.plottedX, point.plottedY, point.size],
+  }));
 
   const ageOption: EChartsOption = {
     backgroundColor: "transparent",
@@ -365,18 +395,19 @@ export default function EdaPage() {
   };
 
   // Country engagement (from advanced) — scatter with engagement vs minutes
-  const countryScatter = (advanced?.country_analysis ?? []).slice(0, 20);
   const countryScatterOption: EChartsOption = {
     backgroundColor: "transparent",
     grid: { left: 10, right: 10, top: 18, bottom: 28, containLabel: true },
     tooltip: {
       trigger: "item",
       formatter: (p: any) =>
-        `<b>${p.data[3]}</b><br/>Avg minutes: ${p.data[0]}<br/>Avg engagement: ${p.data[1]}<br/>Users: ${p.data[2]}`,
+        `<b>${String(p.data.country)}</b><br/>Avg minutes: ${Number(p.data.actualMinutes).toFixed(1)}<br/>Avg engagement: ${Number(p.data.actualEngagement).toFixed(1)}<br/>Users: ${Number(p.data.size).toLocaleString()}`,
     },
     xAxis: {
       type: "value",
       name: "Avg daily minutes",
+      min: countryMinuteExtent.min,
+      max: countryMinuteExtent.max,
       nameGap: 22,
       nameTextStyle: { color: "#7A7A88", fontSize: 10 },
       axisLabel: { color: "#7A7A88", fontSize: 10 },
@@ -385,6 +416,8 @@ export default function EdaPage() {
     yAxis: {
       type: "value",
       name: "Engagement",
+      min: countryEngagementExtent.min,
+      max: countryEngagementExtent.max,
       nameTextStyle: { color: "#7A7A88", fontSize: 10 },
       axisLabel: { color: "#7A7A88", fontSize: 10 },
       splitLine: { lineStyle: { color: "rgba(17,17,27,0.05)" } },
@@ -392,13 +425,8 @@ export default function EdaPage() {
     series: [
       {
         type: "scatter",
-        symbolSize: (d: any) => 6 + Math.sqrt(Number(d[2])) / 4,
-        data: countryScatter.map((c) => [
-          Number(c.avg_minutes),
-          Number(c.avg_engagement),
-          Number(c.user_count),
-          String(c.country),
-        ]),
+        symbolSize: (value) => 7 + Math.sqrt(Number((value as number[])[2])) / 5,
+        data: countryScatterData,
         itemStyle: {
           color: {
             type: "linear",
@@ -414,6 +442,29 @@ export default function EdaPage() {
           borderColor: "#FFFFFF",
           borderWidth: 1,
         },
+        emphasis: { scale: true },
+      },
+      {
+        type: "scatter",
+        data: countryScatterData.filter((point) => highlightedCountryKeys.has(point.country)),
+        symbolSize: (value) => 10 + Math.sqrt(Number((value as number[])[2])) / 5,
+        itemStyle: {
+          color: "rgba(221,42,123,0.92)",
+          borderColor: "#FFFFFF",
+          borderWidth: 2,
+        },
+        label: {
+          show: true,
+          position: "top",
+          distance: 6,
+          color: "#5C5C6B",
+          fontSize: 10,
+          backgroundColor: "rgba(255,255,255,0.88)",
+          borderRadius: 999,
+          padding: [3, 6],
+          formatter: (p: any) => String(p.data.country),
+        },
+        labelLayout: { hideOverlap: true, moveOverlap: "shiftY" },
       },
     ],
   };

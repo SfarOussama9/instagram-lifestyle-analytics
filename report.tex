@@ -1,0 +1,993 @@
+\documentclass[12pt,a4paper]{article}
+
+% =========================
+% PACKAGES
+% =========================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+\geometry{margin=1in}
+\onehalfspacing
+\graphicspath{{figures/}{./}}
+
+\newcommand{\safelogo}[2][]{%
+\IfFileExists{#2}{\includegraphics[#1]{#2}}{\fbox{\parbox[c][2.2cm][c]{3cm}{\centering Missing logo\\\texttt{#2}}}}%
+}
+
+\newcommand{\reportfigure}[3]{%
+\IfFileExists{#1}{\includegraphics[width=#2]{#1}}{%
+\fbox{\begin{minipage}[c][0.30\textheight][c]{#2}
+\centering
+\textbf{Upload figure}\\[0.15cm]
+\texttt{#1}\\[0.25cm]
+#3
+\end{minipage}}}%
+}
+
+\newcommand{\modelpanel}[3]{%
+\IfFileExists{#1}{\includegraphics[width=\linewidth]{#1}}{%
+\fbox{\begin{minipage}[c][0.16\textheight][c]{\linewidth}
+\centering
+\textbf{Upload screenshot}\\[0.10cm]
+\texttt{#1}\\[0.15cm]
+#3
+\end{minipage}}}%
+\caption{#2}%
+}
+
+\begin{document}
+% =========================
+% TITLE PAGE (CUSTOM)
+% =========================
+
+\begin{titlepage}
+
+% =========================
+% LOGOS (ABSOLUTE POSITION STYLE)
+% =========================
+\noindent
+\begin{minipage}[t]{0.70\textwidth}
+\raggedright
+\safelogo[width=3cm]{medtech_logo.png}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.15\textwidth}
+\raggedleft
+\safelogo[width=3cm]{instagram_logo.png}
+\end{minipage}
+
+\vspace{2cm}
+
+% =========================
+% TITLE
+% =========================
+\begin{center}
+{\Huge \textbf{Social Media User Analysis}}\\[0.3cm]
+{\Large Instagram Behavioral \& Well-Being Analytics}\\[0.2cm]
+{\large Notebook Analysis and Interactive Dashboard}\\[0.8cm]
+
+\rule{0.9\textwidth}{0.5mm} \\[0.4cm]
+
+{\large \textbf{Project Report}}\\[0.4cm]
+
+\rule{0.9\textwidth}{0.5mm}
+
+\vspace{2cm}
+
+% =========================
+% AUTHORS
+% =========================
+\textbf{Prepared by:}\\[0.3cm]
+
+Oussama Sfar\\
+Ines Turki\\
+Yasmine Jedidi\\
+Feriel Charrad\\
+
+\vspace{1.5cm}
+
+% =========================
+% UNIVERSITY INFO
+% =========================
+\textbf{South Mediterranean University}\\[0.3cm]
+Course: Data Analytics\\
+Instructor: Hamza Mouharrar\\
+
+\vspace{1.5cm}
+
+% =========================
+% DATE (FORCED SAME PAGE)
+% =========================
+\textbf{April 29, 2026}
+
+\end{center}
+
+\end{titlepage}
+\newpage
+
+% =========================
+% ONE PAGE SUMMARY
+% =========================
+
+\section*{One Page Summary}
+\addcontentsline{toc}{section}{One Page Summary}
+
+This report presents a complete data analytics and machine learning project built around a large-scale synthetic Instagram lifestyle dataset. The full dataset contains approximately 1.55 million user records and 58 raw columns covering demographics, lifestyle indicators, health variables, platform behavior, engagement activity, and self-reported well-being outcomes. The project has two connected deliverables: a reproducible Jupyter notebook for analysis and model development, and an interactive FastAPI/Next.js dashboard for exploration, prediction, persona discovery, and batch scoring.
+
+The main objectives are to explore Instagram usage patterns, examine relationships between activity intensity and well-being indicators, compare machine learning models for stress, happiness, engagement, and addiction-risk tasks, and translate the analysis into a usable dashboard experience. The project also aims to show how analytical results can be communicated responsibly when the source data are synthetic rather than collected from real platform users.
+
+The methodology includes exploratory data analysis, data quality assessment, feature engineering, categorical encoding, numerical scaling, supervised learning, unsupervised clustering, and dashboard deployment. Regression models were trained for self-reported happiness, perceived stress score, and user engagement score. Classification models were trained for social media addiction risk, while K-Means clustering and PCA-style visualization were used to identify behavioral personas. The dashboard operationalizes these results through pages for Overview, EDA, Personas, Advanced Analysis, Models, Prediction, Insights, AutoML-style upload scoring, and About.
+
+The findings show that Instagram usage intensity is the central organizing signal in the dataset. Perceived stress is the strongest meaningful prediction target, with the best regression model achieving approximately $R^2 = 0.739$. Self-reported happiness is much harder to predict, with approximately $R^2 = 0.168$, which is consistent with the difficulty of modeling subjective well-being. User engagement score is almost perfectly predictable, with approximately $R^2 = 0.999$, but this result is interpreted as target-construction overlap rather than real-world predictive power. Addiction-risk classification also performs near perfectly because the label is engineered from usage-related features.
+
+From an academic perspective, the project demonstrates an end-to-end workflow: data understanding, preprocessing, modeling, evaluation, interpretation, and limitations. From an industry perspective, it demonstrates how analytics can be delivered as an interactive decision-support product rather than only as static notebook outputs. The most important caveat is that all conclusions are conditional on the synthetic data-generating process; the project should be read as a strong analytics and dashboard case study, not as causal evidence about real Instagram users.
+
+Overall, the work showcases both analytical competence and software implementation: a notebook that explains the modeling logic, and a dashboard that makes the results explorable, presentable, and reusable.
+
+\newpage
+
+% =========================
+% TABLE OF CONTENTS
+% =========================
+\tableofcontents
+\newpage
+
+% =========================
+% LIST OF FIGURES
+% =========================
+\addcontentsline{toc}{section}{List of Figures}
+\listoffigures
+\newpage
+
+% =========================
+% INTRODUCTION
+% =========================
+\section{Introduction}
+
+\subsection{Context and Significance}
+
+Data analytics and machine learning have become essential tools for extracting meaningful insights from large and complex datasets. In the context of social media platforms, user-generated data provides valuable information about behavioral patterns, engagement habits, and potential relationships between digital activity and user well-being. These techniques enable the transformation of raw behavioral data into structured insights that can support analysis, prediction, and decision-making.
+
+\subsection{Scope of the Project}
+
+This project focuses on the analysis of a large-scale synthetic dataset representing Instagram user behavior. The full dataset contains approximately 1.55 million user profiles with 58 raw features, including demographic information, lifestyle indicators, health metrics, platform engagement variables, and well-being targets \cite{SocialMediaDataset2025}.
+
+The study covers:
+\begin{itemize}
+    \item Exploratory analysis of user demographics, lifestyle, and Instagram usage patterns
+    \item Correlation analysis between usage behavior and well-being indicators
+    \item Investigation of three target variables: self-reported happiness, perceived stress score, and user engagement score
+    \item Predictive modeling for stress, happiness, engagement, and addiction risk
+    \item K-Means clustering for user persona discovery
+    \item Development of an interactive dashboard for EDA, model comparison, live prediction, insights, and AutoML-style CSV scoring
+\end{itemize}
+
+\subsection{Main Objectives}
+
+The main objectives of this study are:
+\begin{itemize}
+    \item To analyze patterns in social media usage using data analytics techniques
+    \item To examine relationships between Instagram activity and user well-being indicators such as stress and happiness
+    \item To identify key behavioral factors influencing engagement and psychological metrics
+    \item To compare supervised machine learning models for regression and classification tasks
+    \item To segment users into interpretable behavioral personas
+    \item To present the findings through both a reproducible notebook and an interactive dashboard
+\end{itemize}
+
+% =========================
+% BACKGROUND & LITERATURE REVIEW
+% =========================
+\section{Background and Literature Review}
+
+\subsection{Social Media and Behavioral Data Analysis}
+
+Social media platforms generate large-scale behavioral datasets that are widely used in data science research. These datasets capture user interactions such as engagement patterns, content consumption, and communication behavior, which can be analyzed to understand digital behavior at scale. Social media is often studied as a complex system where user activity reflects both behavioral and psychological tendencies \cite{Dodds2011}.
+
+Recent research highlights that social media usage can have both positive and negative effects depending on usage patterns, intensity, individual differences, and measurement strategy. Large-scale studies also warn that average associations between digital technology use and well-being can be small, context-dependent, and difficult to interpret causally \cite{Valkenburg2022,OrbenPrzybylski2019}.
+
+\subsection{Machine Learning in Social Media and Mental Health Studies}
+
+Machine learning techniques are increasingly used to analyze social media data for predicting behavioral and psychological outcomes. Common approaches include supervised learning models for regression and classification tasks, as well as unsupervised learning methods such as clustering for identifying user groups.
+
+Previous studies have applied machine learning to infer mental-health or well-being indicators from social media traces, but these approaches require careful interpretation because platform data are noisy proxies for human states \cite{Chancellor2020,DeChoudhury2013}. For this reason, model performance must be discussed alongside feature construction, target definition, and data quality.
+
+Despite these advancements, results vary significantly depending on dataset quality, feature selection, and modeling approaches, indicating that this remains a challenging research area.
+
+\subsection{Key Challenges in the Domain}
+
+Existing literature highlights several challenges in analyzing social media behavioral data:
+
+\begin{itemize}
+    \item \textbf{Weak correlations:} Many studies report inconsistent or weak relationships between social media usage and well-being indicators \cite{OrbenPrzybylski2019}.
+    
+    \item \textbf{Ambiguity of metrics:} Concepts such as engagement, happiness, and stress are defined differently across studies, leading to inconsistent results.
+    
+    \item \textbf{High dimensionality:} Social media datasets often contain highly correlated features, making modeling and interpretation difficult.
+    
+    \item \textbf{Data limitations:} Many studies rely on observational or self-reported data, which limits causal interpretation.
+\end{itemize}
+
+\subsection{Contribution of This Study}
+
+This study contributes to the field by analyzing a large-scale synthetic dataset of over one million Instagram users, combining demographic, lifestyle, health, and behavioral features.
+
+Unlike many existing studies that focus on small-scale datasets or single outcomes, this project integrates:
+\begin{itemize}
+    \item Exploratory Data Analysis (EDA) of behavioral and demographic distributions
+    \item Correlation analysis between Instagram usage and multiple well-being indicators
+    \item Predictive modeling of stress, happiness, and engagement scores
+    \item Clustering techniques for user persona discovery
+    \item A deployable interactive dashboard that turns notebook findings into a usable analytics product
+\end{itemize}
+
+Additionally, this work provides a comparative analysis of multiple target variables, highlighting differences in predictability and feature relationships within a controlled synthetic environment. Its main practical contribution is the combination of rigorous notebook analysis with an application layer that supports exploration, communication, and upload-based scoring.
+% =========================
+% METHODOLOGY
+% =========================
+\section{Methodology and Data Preprocessing}
+
+\subsection{Approach}
+The project focuses on analyzing Instagram user data to uncover insights into user behavior, lifestyle patterns, and engagement metrics. The methodology is structured as follows:
+
+\begin{enumerate}
+    \item \textbf{Data Exploration}: Initial exploration to understand the dataset’s structure, identify key variables, and detect potential issues such as missing values or outliers.
+    
+    \item \textbf{Data Cleaning and Preprocessing}: Addressing data quality issues, including handling missing values, encoding categorical variables, and scaling numerical features to ensure consistency.
+    
+    \item \textbf{Feature Engineering}: Creating new features to enhance the dataset’s predictive power and capture domain-specific insights.
+    
+    \item \textbf{Modeling and Segmentation}: Comparing regression and classification models, then applying clustering to identify behavioral personas.
+    
+    \item \textbf{Dashboard Implementation}: Translating the notebook findings into an interactive dashboard with live API endpoints, charts, prediction controls, and upload-based scoring.
+\end{enumerate}
+
+This systematic approach ensures that the data is properly prepared for analysis and that the insights generated are both meaningful and actionable.
+\subsection{Tools and Technologies}
+The following tools, frameworks, and technologies were utilized throughout the project:
+
+\begin{itemize}
+    \item \textbf{Python}: The primary programming language for data analysis and machine learning
+    \item \textbf{Pandas}: For data manipulation, cleaning, and preprocessing
+    \item \textbf{NumPy}: For numerical computations and array operations
+    \item \textbf{Matplotlib and Seaborn}: For exploratory data analysis and static visualizations
+    \item \textbf{Plotly}: For creating interactive and dynamic visualizations
+    \item \textbf{Scikit-learn}: For preprocessing, clustering, and evaluation metrics
+    \item \textbf{Jupyter Notebook}: For iterative development, documentation, and visualization
+    \item \textbf{Joblib}: For saving and loading machine learning models and preprocessing pipelines
+    \item \textbf{FastAPI and Uvicorn}: For serving trained artifacts, model outputs, predictions, and upload-scoring endpoints
+    \item \textbf{Next.js, React, and TypeScript}: For the interactive dashboard frontend
+    \item \textbf{Tailwind CSS and Apache ECharts}: For responsive UI styling and interactive dashboard visualizations
+\end{itemize}
+
+These tools were chosen for their robustness, flexibility, and widespread use in the data science community, ensuring efficient and reproducible workflows.
+
+\subsection{Justification}
+The methods and tools were selected based on the following considerations:
+
+\begin{itemize}
+    \item \textbf{Python Ecosystem}: Python offers a comprehensive ecosystem of libraries for data analysis, machine learning, and visualization, making it an ideal choice for this project.
+    
+    \item \textbf{Scikit-learn}: Provides reliable implementations of supervised models, clustering algorithms, preprocessing utilities, and evaluation metrics.
+    
+    \item \textbf{Plotly}: Enables the creation of interactive visualizations, which are essential for effectively communicating insights to stakeholders.
+    
+    \item \textbf{FastAPI and Next.js}: Support an application-style deliverable where the analysis can be explored outside the notebook through API-backed pages and reusable components.
+    
+    \item \textbf{Feature Engineering}: By creating domain-specific features, the dataset’s quality and predictive power were significantly enhanced, enabling deeper insights into user behavior.
+\end{itemize}
+
+The combination of these tools and methods ensures that the analysis is both rigorous and interpretable.
+
+\subsection{Data Overview}
+The dataset used in this project contains detailed information about Instagram users, including:
+
+\begin{itemize}
+    \item \textbf{Demographics}: Age, gender, and location
+    \item \textbf{Engagement Metrics}: Likes, comments, daily active minutes, and session counts
+    \item \textbf{Behavioral Metrics}: Content consumption, creation, and social interactions
+    \item \textbf{Health and Lifestyle}: Perceived stress scores, happiness levels, and wellness indices
+\end{itemize}
+\begin{figure}[H]
+    \centering
+    \reportfigure{dashboard_overview_1.png}{0.95\linewidth}{Use the first dashboard overview screenshot, such as the top KPI and navigation area.}
+    \caption{Dashboard Overview: Summary KPIs}
+    \label{fig:dashboard_overview_1}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportfigure{dashboard_overview_2.png}{0.95\linewidth}{Use the second dashboard overview screenshot, such as the lower charts, distributions, or summary panels.}
+    \caption{Dashboard Overview: Exploratory Panels}
+    \label{fig:dashboard_overview_2}
+\end{figure}
+
+Two datasets were utilized:
+
+\begin{enumerate}
+    \item \texttt{instagram\_users\_lifestyle.csv}: The full dataset containing approximately 1.55 million rows and 58 raw columns.
+    \item \texttt{instagram\_users\_lifestyle\_sample\_10000\_engineered.csv}: A bundled, pre-engineered sample used so teammates and reviewers can run the project without downloading the large raw CSV.
+\end{enumerate}
+
+The notebook uses the full dataset when it is available and falls back to the 10,000-row engineered sample when necessary. The backend follows the same portability principle through a dataset-path resolver and a cached training-state artifact, allowing the dashboard to start quickly after models have already been trained.
+
+\subsection{Data Preprocessing}
+Data preprocessing was a critical step in preparing the dataset for analysis. The following steps were undertaken:
+
+\begin{enumerate}
+    \item \textbf{Handling Missing Values}: Missing values were identified and numeric columns were made model-ready through coercion and filling strategies appropriate to each modeling frame.
+    
+    \item \textbf{Target and Feature Separation}: Target variables, identifiers, dates, and derived leakage-prone columns were excluded from the model feature matrix where appropriate.
+    
+    \item \textbf{Encoding Categorical Variables}: Categorical variables such as gender, country, education level, relationship status, subscription status, and content preferences were label-encoded for the dashboard training pipeline. Separately, interpretable bins were created for EDA, including:
+    \begin{itemize}
+        \item \texttt{usage\_category}: Binned based on daily active minutes on Instagram
+        \item \texttt{stress\_category}: Binned based on perceived stress scores
+    \end{itemize}
+    
+    \item \textbf{Scaling Numerical Features}: Numerical features were standardized using \texttt{StandardScaler} to ensure uniformity and improve the performance of clustering algorithms.
+    
+    \item \textbf{Feature Engineering}: A total of 23 new features were created, including:
+    \begin{itemize}
+        \item Ratios: \texttt{likes\_to\_followers\_ratio}, \texttt{comments\_to\_posts\_ratio}
+        \item Composite indices: \texttt{wellness\_index}, \texttt{addiction\_risk\_score}
+        \item Time-based features: \texttt{account\_age\_years}, \texttt{days\_since\_last\_login}
+    \end{itemize}
+    
+    \item \textbf{Clustering Preparation}: A behavioral feature subset was selected, scaled, and used for K-Means clustering with six named personas.
+    
+    \item \textbf{Dashboard Preparation}: The trained artifacts, encoders, scaler, clustering model, persona definitions, feature importance values, and summary payloads were cached with Joblib for reuse by the API and frontend.
+\end{enumerate}
+
+This preprocessing pipeline ensures that the dataset is clean, well-structured, and enriched with meaningful features, enabling robust analysis and insightful clustering results.
+% =========================
+% MACHINE LEARNING MODELS
+% =========================
+\section{Machine Learning Models}
+
+\subsection{Algorithms Used}
+The project employs both unsupervised and supervised machine learning techniques to analyze Instagram user behavior and predict well-being indicators.
+
+\subsubsection{Clustering}
+
+\textbf{K-Means Clustering}:
+\begin{itemize}
+    \item A widely used unsupervised learning algorithm that partitions data into distinct clusters based on similarity.
+    \item The algorithm minimizes within-cluster variance by iteratively assigning data points to the nearest centroid and updating cluster centers.
+    \item K-Means was selected for its simplicity, scalability, and effectiveness in identifying patterns in high-dimensional datasets.
+\end{itemize}
+
+The clustering process aims to group users with similar engagement, lifestyle, and behavioral characteristics, enabling the identification of meaningful user personas.
+
+\subsubsection{Predictive Modeling}
+
+In addition to clustering, supervised learning models were developed to address multiple predictive tasks:
+
+\textbf{Regression Tasks}:
+\begin{itemize}
+    \item Self-reported happiness prediction
+    \item Perceived stress score prediction
+    \item User engagement score prediction
+\end{itemize}
+
+\textbf{Classification Task}:
+\begin{itemize}
+    \item Social media addiction risk (binary classification)
+\end{itemize}
+
+These models aim to capture relationships between user behavior and psychological or engagement outcomes.
+
+\subsection{Hyperparameter Tuning}
+The project used a controlled model-comparison strategy rather than an exhaustive grid search. The goal was to compare interpretable baselines against stronger tree-based methods while keeping training time reasonable for a classroom project and an interactive dashboard.
+
+For predictive modeling, the following model settings were used:
+
+\begin{itemize}
+    \item \textbf{Linear and Ridge Regression}: Baseline linear models for comparison.
+    \item \textbf{Random Forest models}: 120 estimators, maximum depth of 12, minimum leaf size of 4, and a fixed random state.
+    \item \textbf{HistGradientBoosting models}: Maximum depth of 10, learning rate of 0.08, and a fixed random state.
+    \item \textbf{Logistic Regression}: Maximum iteration limit of 1000 for the addiction-risk baseline classifier.
+\end{itemize}
+
+For K-Means clustering, several hyperparameter strategies were applied:
+
+\begin{itemize}
+    \item \textbf{Number of Clusters (k)}:
+    The optimal number of clusters was determined using both the Elbow Method and Silhouette Analysis:
+    \begin{itemize}
+        \item Elbow Method: Evaluates inertia (sum of squared distances to centroids) for different values of $k$, identifying a point where improvement slows down.
+        \item Silhouette Analysis: Measures cluster cohesion and separation, where higher values indicate better-defined clusters.
+    \end{itemize}
+    
+    \item \textbf{Initialization Strategy}:
+    The \textit{k-means++} initialization method was used to improve convergence speed and avoid poor clustering solutions.
+    
+    \item \textbf{Maximum Iterations}:
+    The algorithm was configured with a maximum of 300 iterations to ensure convergence.
+    
+    \item \textbf{Random State}:
+    A fixed random state was used to guarantee reproducibility of results.
+\end{itemize}
+\begin{figure}[H]
+    \centering
+    \reportfigure{cluster_selection.png}{0.9\linewidth}{Use the notebook elbow/silhouette figure or the Personas dashboard clustering view.}
+    \caption{Cluster-Selection Diagnostics}
+    \label{fig:cluster_selection}
+\end{figure}
+
+These strategies supported stable and interpretable user segments. The final dashboard uses six named personas because six clusters provided a clearer product narrative and aligned with the dashboard persona definitions.
+
+\subsection{Training and Testing}
+The training and evaluation process differs slightly between clustering and predictive modeling tasks.
+
+\subsubsection{Clustering Process}
+
+\begin{enumerate}
+    \item \textbf{Data Preparation}:
+    A subset of representative features was selected, including engagement metrics, behavioral indicators, and engineered features. Features were standardized using \texttt{StandardScaler}.
+    
+    \item \textbf{Training}:
+    The K-Means model was trained on a representative model sample and the cluster-selection diagnostics used a 20{,}000-row sample for computational efficiency. The final dashboard configuration uses $k = 6$.
+    
+    \item \textbf{Validation}:
+    The clustering quality was evaluated using:
+    \begin{itemize}
+        \item \textbf{Inertia}: Measures within-cluster variance (lower is better)
+        \item \textbf{Silhouette Score}: Measures cluster separation (higher is better)
+    \end{itemize}
+    
+    \item \textbf{Visualization}:
+    Results were visualized using scatter plots and heatmaps to interpret user groupings and identify behavioral patterns.
+\end{enumerate}
+
+\subsubsection{Predictive Modeling Process}
+
+\begin{enumerate}
+    \item \textbf{Data Splitting}:
+    The dataset was divided into training and testing subsets (typically 80\% training and 20\% testing).
+    
+    \item \textbf{Preprocessing}:
+    Numerical features were standardized using \texttt{StandardScaler}, and missing values were handled using median imputation.
+    
+    \item \textbf{Training}:
+    Models were trained on the training dataset to learn relationships between input features and target variables.
+    
+    \item \textbf{Evaluation}:
+    Model performance was assessed using:
+    \begin{itemize}
+        \item For regression: Mean Squared Error (MSE), Root Mean Squared Error (RMSE), and $R^2$ score
+        \item For classification: Accuracy and related evaluation metrics
+    \end{itemize}
+\end{enumerate}
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \modelpanel{model_happiness.png}{Happiness regression}{Screenshot of the happiness model result.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \modelpanel{model_stress.png}{Stress regression}{Screenshot of the stress model result.}
+    \end{subfigure}
+    
+    \vspace{0.25cm}
+    
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \modelpanel{model_engagement.png}{Engagement regression}{Screenshot of the engagement model result.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\linewidth}
+        \centering
+        \modelpanel{model_addiction.png}{Addiction-risk classification}{Screenshot of the addiction-risk classification result.}
+    \end{subfigure}
+    \caption{Dashboard Model Comparison Panels}
+    \label{fig:models_page}
+\end{figure}
+
+This section provides a comprehensive overview of the machine learning techniques used in the project, including clustering for user segmentation and predictive modeling for estimating behavioral and psychological outcomes.
+% =========================
+% RESULTS AND DISCUSSION
+% =========================
+\section{Results and Discussion}
+ 
+\subsection{Performance Metrics}
+ 
+\subsubsection{Regression Models}
+ 
+Three regression targets were evaluated using Linear Regression, Ridge Regression, Random Forest Regressor, and HistGradientBoosting Regressor. The best-performing model for each target was the HistGradientBoosting Regressor. Table~\ref{tab:regression_metrics} summarizes the key results.
+ 
+\begin{table}[H]
+\centering
+\caption{Best Regression Model Performance (HistGradientBoosting Regressor)}
+\label{tab:regression_metrics}
+\begin{tabular}{lp{1.7cm}p{1.9cm}p{5.2cm}}
+\toprule
+\textbf{Target Variable} & \textbf{$R^2$} & \textbf{RMSE} & \textbf{Interpretation} \\
+\midrule
+Self-Reported Happiness  & 0.168 & 2.615 & Weak; subjective well-being is difficult to predict \\
+Perceived Stress Score   & 0.739 & 6.061 & Strongest meaningful target; usage intensity dominates \\
+User Engagement Score    & $\approx$0.999 & 0.056 & Near-perfect; likely target-construction overlap \\
+\bottomrule
+\end{tabular}
+\end{table}
+ 
+\subsubsection{Classification Model}
+ 
+Social media addiction risk (binary) was classified using Logistic Regression, Random Forest Classifier, and HistGradientBoosting Classifier. The HistGradientBoosting Classifier achieved near-perfect Accuracy, F1-score, and ROC AUC (approximately 0.999). This extremely high performance is consistent with the fact that the binary target was derived from the same usage-based features used as predictors, and reflects dataset construction rather than real-world detection capability.
+ 
+\subsubsection{Clustering Results}
+ 
+K-Means clustering was evaluated using a representative subset and finalized in the dashboard with $k = 6$. The six-cluster solution produced a clearer presentation layer because each cluster could be mapped to an interpretable persona: Healthy Casual, Doom Scroller, Aspiring Influencer, Social Butterfly, Lurker, and Power User. The Silhouette Score indicated moderate cluster separation, consistent with the expectation that behavioral clusters in a synthetic dataset will not exhibit sharp natural boundaries.
+ 
+ 
+\subsection{Model Comparison}
+ 
+Table~\ref{tab:model_comparison} summarizes the relative performance of all regression models across the three targets.
+ 
+\begin{table}[H]
+\centering
+\caption{Regression Model Comparison by Target}
+\label{tab:model_comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Model} & \multicolumn{3}{c}{\textbf{$R^2$ Score}} \\
+\cmidrule(lr){2-4}
+ & \textbf{Happiness} & \textbf{Stress} & \textbf{Engagement} \\
+\midrule
+Linear Regression                & Low   & Moderate & High \\
+Ridge Regression                 & Low   & Moderate & High \\
+Random Forest Regressor          & Low   & High     & Near-perfect \\
+HistGradientBoosting Regressor   & 0.168 & 0.739    & $\approx$0.999 \\
+\bottomrule
+\end{tabular}
+\end{table}
+ 
+The gradient boosting family consistently outperformed linear models across all targets. The dramatic difference in predictability between the three targets reflects both the strength of the Instagram usage signal on stress and the synthetic construction of the engagement score.
+
+\newpage
+
+\subsection{Visualizations}
+ 
+The following visualizations were produced during the analysis. Due to the interactive nature of many Plotly-based outputs, representative static descriptions are provided here.
+ 
+\begin{figure}[H]
+    \centering
+    \reportfigure{target_distributions.png}{0.85\linewidth}{Use the notebook target-distribution chart.}
+    \caption{Target Variable Distributions}
+    \label{fig:target_dist}
+\end{figure}
+ 
+\begin{figure}[H]
+    \centering
+    \reportfigure{correlation_heatmap.png}{0.85\linewidth}{Use the notebook Pearson correlation heatmap.}
+    \caption{Pearson Correlation Heatmap}
+    \label{fig:corr_heatmap}
+\end{figure}
+ 
+\begin{figure}[H]
+    \centering
+    \reportfigure{feature_correlations.png}{0.85\linewidth}{Use the notebook top-feature correlation chart.}
+    \caption{Top Feature Correlations by Target}
+    \label{fig:feature_target_corr}
+\end{figure}
+ 
+\begin{figure}[H]
+    \centering
+    \reportfigure{model_diagnostics.png}{0.85\linewidth}{Use the notebook best-model diagnostics figure with predicted-vs-actual plots and ROC curve.}
+    \caption{Best Model Diagnostics}
+    \label{fig:model_diagnostics}
+\end{figure}
+ 
+\begin{figure}[H]
+    \centering
+    \reportfigure{personas_page.png}{0.9\linewidth}{Use a screenshot of the dashboard Personas page or the cluster heatmap.}
+    \caption{Persona Discovery Output}
+    \label{fig:clusters}
+\end{figure}
+
+\subsection{Dashboard Showcase}
+
+The dashboard is a major deliverable of the project because it turns static analysis into an interactive analytics product. It includes a backend API for trained artifacts and a frontend interface for exploration, storytelling, and scoring new CSV files.
+
+\begin{figure}[H]
+    \centering
+    \reportfigure{eda_page.png}{0.95\linewidth}{Use a full-page screenshot of the EDA page, ideally showing geography, demographics, and usage visuals.}
+    \caption{EDA Dashboard Page}
+    \label{fig:eda_page}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportfigure{predict_page.png}{0.95\linewidth}{Use a screenshot of the Predict page after entering a sample profile and generating predictions.}
+    \caption{Prediction Console}
+    \label{fig:predict_page}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportfigure{automl_page.png}{0.95\linewidth}{Use a screenshot of the AutoML page after uploading/scoring a CSV if possible; otherwise use the upload screen.}
+    \caption{AutoML Upload Workflow}
+    \label{fig:automl_page}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \reportfigure{insights_page.png}{0.95\linewidth}{Use a screenshot of the Insights page showing the narrative findings and persona cards.}
+    \caption{Insights Dashboard Page}
+    \label{fig:insights_page}
+\end{figure}
+ 
+
+\subsection{Analysis and Interpretation}
+
+\subsubsection{Perceived Stress Score}
+ 
+Perceived stress was the most reliably predicted target, with an $R^2$ of approximately 0.739 using the HistGradientBoosting Regressor. This strong performance is consistent with the correlation analysis, where \texttt{daily\_active\_minutes\_instagram} achieved $r = +0.83$ with stress — the single strongest feature-target association in the entire dataset. Every Instagram activity metric, including passive behaviors such as reels watched and ads viewed, was positively and consistently correlated with stress. The monotonic relationship observed in the usage-category analysis further confirms this pattern: users in the Extreme usage group (3+ hours/day) showed an average stress score of 28.4, compared to only 4.6 for Light users (under 30 minutes/day).
+ 
+\subsubsection{Self-Reported Happiness}
+ 
+Self-reported happiness was the weakest predictive target, achieving an $R^2$ of only 0.168. While the direction of the association is consistent -- all Instagram activity metrics are negatively correlated with happiness -- the effect sizes are modest and the target exhibits a uniform distribution from 1 to 10, making it inherently difficult to predict. This finding is consistent with the wider literature, which often reports weak and inconsistent relationships between social media usage and subjective well-being \cite{OrbenPrzybylski2019}. Happiness should therefore be interpreted as a substantively interesting but analytically noisy outcome variable.
+ 
+\subsubsection{User Engagement Score}
+ 
+The near-perfect $R^2$ ($\approx$ 0.999) for user engagement score indicates that this target is mechanically derived from the same usage features used as predictors, rather than representing an independent behavioral dimension. Permutation importance analysis confirmed that variables such as \texttt{usage\_intensity\_score}, \texttt{creator\_score}, and \texttt{session\_depth} dominated predictions. This result is informative about the dataset's construction but should not be generalized as evidence of genuine real-world predictive power.
+ 
+\subsubsection{User Persona Clustering}
+ 
+The K-Means analysis with $k = 6$ identified six interpretable user personas:
+ 
+\begin{enumerate}
+    \item \textbf{The Healthy Casual} -- Balanced behavior and comparatively favorable well-being indicators.
+    \item \textbf{The Doom Scroller} -- Very heavy passive consumption, elevated stress, and lower happiness. This is the highest-risk narrative profile.
+    \item \textbf{The Aspiring Influencer} -- Creator-heavy behavior with high posting and commenting activity.
+    \item \textbf{The Social Butterfly} -- High social interaction through messages, comments, stories, and session-dense activity.
+    \item \textbf{The Lurker} -- Low-posting, consumption-oriented behavior with lighter engagement and relatively favorable well-being.
+    \item \textbf{The Power User} -- High follower counts and more purposeful, creator-like platform use.
+\end{enumerate}
+ 
+These personas illustrate that Instagram usage intensity is the primary organizational dimension in the data, rather than lifestyle or health differences.
+ 
+\subsubsection{Causal-Style Diagnostics}
+ 
+The causal inference analysis in Section 9 of the notebook revealed that the negative relationship between Instagram usage and happiness persisted after adjusting for key confounders including age, sleep, exercise, social activity, work hours, and socioeconomic context. The within-stress stratified analysis showed the same directional pattern across lower-, middle-, and higher-stress groups. While these findings strengthen the internal consistency of the observed association, they do not establish causality, as the dataset is synthetic and observational.
+ 
+
+\subsection{Limitations}
+
+Several important limitations must be acknowledged:
+ 
+\begin{itemize}
+    \item \textbf{Fully synthetic data:} The dataset was artificially generated and does not represent real user behavior. All findings are specific to the synthetic data-generating process and should not be generalized to real-world Instagram usage.
+    
+    \item \textbf{Demographic inconsistencies:} The generation process produced logically impossible combinations, such as users aged 15 with children or unrealistic employment statuses for young ages. This limits the interpretability of demographic subgroup analyses.
+    
+    \item \textbf{Target construction overlap:} The near-perfect predictability of user engagement score and addiction risk strongly suggests these targets were constructed from overlapping features, making their evaluation less informative as independent machine learning benchmarks.
+    
+    \item \textbf{Uniform distributions:} Socioeconomic variables (income, education, employment) and health metrics (diet, sleep, BMI) are uniformly distributed, which is a hallmark of synthetic generation. This explains why lifestyle features carry essentially zero predictive signal for the targets.
+    
+    \item \textbf{Single platform:} All records belong to Instagram only. The findings cannot be generalized to other platforms or cross-platform behavior.
+    
+    \item \textbf{No longitudinal structure:} The dataset is cross-sectional. No causal claims about the direction of the relationship between usage and well-being can be supported.
+\end{itemize}
+
+ \newpage
+
+% =========================
+% CONCLUSION
+% =========================
+\section{Conclusion}
+ 
+\subsection{Summary of Achievements}
+ 
+This project successfully applied a complete data analytics and machine learning pipeline to a large-scale synthetic dataset of over one million Instagram user profiles. Starting from raw data, the team completed the following stages: dataset characterization and target variable analysis, exploratory data analysis across demographic, socioeconomic, and behavioral dimensions, correlation analysis between Instagram usage and three well-being indicators, feature engineering producing 23 new behavioral and health-derived variables, supervised predictive modeling for three regression tasks and one classification task, unsupervised user persona discovery via K-Means clustering, advanced causal-style diagnostics including confounder adjustment and stratified analysis, and deployment of an interactive dashboard.
+ 
+The most significant empirical finding is that Instagram usage intensity is the central organizing signal in the dataset. Perceived stress showed a strong positive association with platform activity ($r = +0.83$ for daily active minutes), while self-reported happiness showed consistent but weaker negative associations. The best regression model for stress achieved an $R^2$ of 0.739, demonstrating meaningful but imperfect predictability. Clustering identified six distinct user personas, and the dashboard made those personas, model metrics, and prediction workflows explorable.
+ 
+
+\subsection{Contributions}
+From an academic perspective, this project provided hands-on experience with every stage of a real data science workflow, from raw data exploration to model evaluation and interpretation. Key learning outcomes include:
+ 
+\begin{itemize}
+    \item Applying and interpreting Pearson correlation analysis on high-dimensional behavioral data
+    \item Understanding the difference between predictability of targets (stress vs.\ happiness vs.\ engagement) and the structural reasons behind those differences
+    \item Designing and evaluating K-Means clustering for user segmentation, including hyperparameter selection via the Elbow Method and Silhouette Analysis
+    \item Recognizing the limitations of synthetic datasets and interpreting anomalous results (such as near-perfect engagement score prediction) as artifacts of data construction rather than genuine performance
+    \item Applying causal-style diagnostics — confounder auditing, partial correlation, stratified analysis — to assess the robustness of observed associations without overclaiming causality
+    \item Communicating findings responsibly, distinguishing what the data support from what they cannot establish
+    \item Building a deployable analytics interface that connects trained artifacts to user-facing dashboard pages, live prediction, and CSV scoring
+\end{itemize}
+ 
+The project also reinforced the importance of data quality assessment early in any analysis. Several aspects of the dataset — uniform categorical distributions, demographic impossibilities, and target construction overlap — would have led to misleading conclusions had they not been identified during the EDA phase.
+
+\subsection{Future Work}
+Several directions could meaningfully extend this analysis:
+ 
+\begin{itemize}
+    \item \textbf{Real-world data:} Replacing the synthetic dataset with real Instagram behavioral data (subject to privacy and ethical constraints) would allow the findings to be tested against actual human behavior and would provide genuinely informative model performance benchmarks.
+    
+    \item \textbf{Longitudinal design:} A panel study tracking the same users over time would enable proper causal inference about whether increased Instagram usage leads to changes in stress and happiness.
+    
+    \item \textbf{Advanced modeling:} Applying regularized regression (Lasso, ElasticNet) or dimensionality reduction (PCA) to address the high multicollinearity within the Instagram Behaviour feature group could improve model interpretability.
+    
+    \item \textbf{Cross-platform analysis:} Extending the dataset to include multiple social media platforms would allow comparison of behavioral and well-being patterns across different digital environments.
+    
+    \item \textbf{Natural Language Processing:} Incorporating text-based features such as caption sentiment or comment tone could provide richer behavioral signals beyond purely numerical engagement metrics.
+    
+    \item \textbf{Fairness and subgroup analysis:} A more systematic investigation of how model performance varies across demographic subgroups (age, gender, income) could reveal important equity considerations in any applied deployment of these models.
+\end{itemize}
+ 
+% =========================
+% REFERENCES
+% =========================
+\newpage
+\bibliographystyle{plain}
+\bibliography{references}
+
+% =========================
+% APPENDICES
+% =========================
+\newpage
+\appendix
+ 
+\section{Appendix A: Additional Data and Tables}
+ 
+\subsection*{A.1 Target Variable Summary Statistics}
+ 
+\begin{table}[H]
+\centering
+\caption{Descriptive Statistics for Target Variables}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Variable} & \textbf{Mean} & \textbf{Median} & \textbf{Std} & \textbf{Min} & \textbf{Max} & \textbf{Skewness} \\
+\midrule
+self\_reported\_happiness  & 5.50  & 5.50  & 2.87  & 1  & 10    & $\approx 0$ (uniform) \\
+perceived\_stress\_score   & 19.99 & 20.00 & 11.83 & 0  & 40    & $\approx 0$ (uniform) \\
+user\_engagement\_score    & 1.64  & N/A   & 1.81  & 0.67 & 18.67 & Strongly right-skewed \\
+\bottomrule
+\end{tabular}
+\end{table}
+ 
+\subsection*{A.2 Pairwise Correlations Between Target Variables}
+ 
+\begin{table}[H]
+\centering
+\caption{Pearson Correlation Matrix — Target Variables}
+\begin{tabular}{lccc}
+\toprule
+ & \textbf{Happiness} & \textbf{Stress} & \textbf{Engagement} \\
+\midrule
+self\_reported\_happiness & 1.00 & $\approx 0.00$ & $+0.27$ \\
+perceived\_stress\_score  & $\approx 0.00$ & 1.00 & $-0.44$ \\
+user\_engagement\_score   & $+0.27$ & $-0.44$ & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
+ 
+\subsection*{A.3 Well-being Metrics by Usage Category}
+ 
+\begin{table}[H]
+\centering
+\caption{Average Stress and Happiness by Daily Usage Bucket}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Usage Category} & \textbf{Avg Stress} & \textbf{Avg Happiness} \\
+\midrule
+Light ($<$30 min)          & 4.6  & 7.8 \\
+Moderate (30--60 min)      & 7.2  & 6.7 \\
+Heavy (1--2 h)             & 10.3 & 6.0 \\
+Very Heavy (2--3 h)        & 15.9 & 5.6 \\
+Extreme (3 h+)             & 28.4 & 4.8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+ 
+\subsection*{A.4 Instagram Usage Summary Statistics}
+ 
+\begin{table}[H]
+\centering
+\caption{Key Instagram Usage Metrics (Full Dataset)}
+\begin{tabular}{lc}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Avg daily active minutes   & 188 min \\
+Median daily active minutes & 186 min \\
+Avg sessions per day       & 10.3 \\
+Avg reels watched per day  & 175.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+ 
+\subsection*{A.5 Engineered Features Summary}
+ 
+\begin{table}[H]
+\centering
+\caption{Feature Engineering Groups and Descriptions}
+\begin{tabular}{llp{7cm}}
+\toprule
+\textbf{Group} & \textbf{Count} & \textbf{Key Features} \\
+\midrule
+Engagement Ratios    & 5 & likes\_to\_followers\_ratio, comments\_to\_posts\_ratio, dm\_reciprocity, ad\_click\_rate \\
+Usage Intensity      & 4 & usage\_intensity\_score, passive\_active\_ratio, session\_depth, total\_daily\_interactions \\
+Health Indices       & 4 & bmi\_score, cardio\_score, activity\_score, wellness\_index \\
+Behavioural Segments & 4 & creator\_score, consumer\_score, social\_butterfly\_index, addiction\_risk\_score \\
+Time-based           & 3 & account\_age\_years, days\_since\_last\_login, account\_maturity \\
+Lifestyle Interactions & 3 & work\_life\_digital\_balance, offline\_online\_social\_ratio, hobby\_screen\_balance \\
+\midrule
+\textbf{Total} & \textbf{23} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\newpage
+ 
+\section{Appendix B: Code Snippets}
+ 
+\subsection*{B.1 Feature Engineering Function Excerpt}
+ 
+The following excerpt illustrates the feature-engineering style used in the project. The full implementation creates 23 engineered features, including engagement ratios, usage intensity indices, health composites, persona-related scores, account age features, and lifestyle interaction ratios.
+ 
+\begin{verbatim}
+import numpy as np
+ 
+def engineer_features(dataframe):
+    df_eng = dataframe.copy()
+ 
+    # 1. Engagement Ratios
+    df_eng['likes_to_followers_ratio'] = (
+        df_eng['likes_given_per_day'] / (df_eng['followers_count'] + 1)
+    ).clip(0, 10)
+ 
+    df_eng['comments_to_posts_ratio'] = (
+        df_eng['comments_written_per_day'] /
+        (df_eng['posts_created_per_week'] / 7 + 0.1)
+    ).clip(0, 50)
+ 
+    df_eng['follower_following_ratio'] = (
+        df_eng['followers_count'] / (df_eng['following_count'] + 1)
+    ).clip(0, 100)
+ 
+    df_eng['dm_reciprocity'] = (
+        df_eng['dms_received_per_week'] /
+        (df_eng['dms_sent_per_week'] + 1)
+    ).clip(0, 10)
+ 
+    df_eng['ad_click_rate'] = (
+        df_eng['ads_clicked_per_day'] /
+        (df_eng['ads_viewed_per_day'] + 1)
+    ).clip(0, 1)
+ 
+    # 2. Usage Intensity
+    df_eng['total_daily_interactions'] = (
+        df_eng['likes_given_per_day'] +
+        df_eng['comments_written_per_day'] +
+        df_eng['stories_viewed_per_day'] +
+        df_eng['reels_watched_per_day']
+    )
+ 
+    df_eng['usage_intensity_score'] = (
+        df_eng['daily_active_minutes_instagram'] *
+        df_eng['sessions_per_day']
+    ) / 100
+ 
+    df_eng['passive_active_ratio'] = (
+        (df_eng['reels_watched_per_day'] + df_eng['stories_viewed_per_day']) /
+        (df_eng['posts_created_per_week'] +
+         df_eng['comments_written_per_day'] + 1)
+    ).clip(0, 100)
+ 
+    df_eng['session_depth'] = (
+        df_eng['daily_active_minutes_instagram'] /
+        (df_eng['sessions_per_day'] + 0.1)
+    ).clip(0, 120)
+ 
+    # 3. Health Composite Indices
+    df_eng['bmi_score'] = (
+        100 - np.abs(df_eng['body_mass_index'] - 22) * 3
+    ).clip(0, 100)
+ 
+    df_eng['cardio_score'] = (
+        100
+        - np.abs(df_eng['blood_pressure_systolic'] - 120) * 0.5
+        - np.abs(df_eng['blood_pressure_diastolic'] - 80) * 0.5
+    ).clip(0, 100)
+ 
+    df_eng['activity_score'] = (
+        (df_eng['daily_steps_count'] / 100) +
+        (df_eng['exercise_hours_per_week'] * 5)
+    ).clip(0, 100)
+ 
+    return df_eng
+\end{verbatim}
+ 
+\subsection*{B.2 K-Means Clustering Pipeline}
+ 
+\begin{verbatim}
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+import matplotlib.pyplot as plt
+ 
+# Select clustering features
+cluster_features = [
+    'daily_active_minutes_instagram', 'sessions_per_day',
+    'usage_intensity_score', 'passive_active_ratio',
+    'perceived_stress_score', 'user_engagement_score',
+    'creator_score', 'addiction_risk_score', 'wellness_index'
+]
+ 
+X_cluster = df_engineered[cluster_features].fillna(0)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X_cluster)
+ 
+# Elbow Method
+inertias = []
+k_range = range(2, 11)
+for k in k_range:
+    km = KMeans(n_clusters=k, init='k-means++',
+                max_iter=300, random_state=42)
+    km.fit(X_scaled)
+    inertias.append(km.inertia_)
+ 
+# Fit final model
+km_final = KMeans(n_clusters=6, init='k-means++',
+                  max_iter=300, random_state=42)
+km_final.fit(X_scaled)
+ 
+sil_score = silhouette_score(X_scaled, km_final.labels_,
+                             sample_size=5000, random_state=42)
+print(f'Silhouette Score (k=6): {sil_score:.4f}')
+\end{verbatim}
+ 
+\subsection*{B.3 Predictive Modeling Setup}
+ 
+\begin{verbatim}
+from sklearn.linear_model import LinearRegression, Ridge, LogisticRegression
+from sklearn.ensemble import (RandomForestRegressor, RandomForestClassifier,
+                              HistGradientBoostingRegressor,
+                              HistGradientBoostingClassifier)
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error
+import numpy as np
+ 
+# 80/20 train-test split, stratified on addiction risk
+train_idx, test_idx = train_test_split(
+    modeling_df.index, test_size=0.2, random_state=42,
+    stratify=y_targets['Social Media Addiction Risk']
+)
+ 
+regression_models = {
+    'Linear Regression': LinearRegression(),
+    'Ridge Regression': Ridge(alpha=1.0),
+    'Random Forest Regressor': RandomForestRegressor(
+        n_estimators=120, max_depth=12,
+        min_samples_leaf=4, random_state=42, n_jobs=-1
+    ),
+    'HistGradientBoosting Regressor': HistGradientBoostingRegressor(
+        max_depth=10, learning_rate=0.08, random_state=42
+    ),
+}
+ 
+# Evaluate each model
+for name, model in regression_models.items():
+    model.fit(X_train, y_train[target])
+    preds = model.predict(X_test)
+    r2   = r2_score(y_test[target], preds)
+    rmse = np.sqrt(mean_squared_error(y_test[target], preds))
+    print(f'{name}: R2={r2:.4f}, RMSE={rmse:.4f}')
+\end{verbatim}
+ 
+\end{document}
+ 
