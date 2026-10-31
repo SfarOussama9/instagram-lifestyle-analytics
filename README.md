@@ -1,6 +1,19 @@
-# Instagram Lifestyle Analytics Project
+# Instagram Lifestyle Analytics
 
-This repository contains two deliverables for the project:
+Data science project on how Instagram usage relates to users' lifestyle and wellbeing, built on a
+419 MB Kaggle dataset of Instagram users (a 10,000-row engineered sample is bundled).
+
+- **Feature engineering** on usage, lifestyle and demographic columns.
+- **Clustering (K-Means)** into six user personas, from "The Healthy Casual" to "The Doom Scroller".
+- **Supervised models** (linear/ridge/logistic regression, random forests, gradient boosting) predicting
+  self-reported happiness, perceived stress, engagement, and social media addiction risk.
+- **Interactive dashboard**: FastAPI backend with a training pipeline and dataset upload, and a
+  Next.js + TypeScript frontend with ECharts visualisations.
+- **Report**: `report.tex` (LaTeX).
+
+Team project (4 members).
+
+The repository contains two deliverables:
 
 1. `test.ipynb` for exploration, feature engineering, clustering, modeling, and report figures.
 2. `dashboard/` for the interactive FastAPI + Next.js dashboard.
@@ -57,8 +70,8 @@ DataProject/
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
-cd DataProject
+git clone https://github.com/SfarOussama9/instagram-lifestyle-analytics.git
+cd instagram-lifestyle-analytics
 ```
 
 ### 2. Create a Python virtual environment
@@ -187,21 +200,6 @@ This starts:
 - backend on port `8000`
 - frontend on port `3000`
 
-## Suggested GitHub Workflow For The Team
-
-1. Push the repository without the 419 MB raw dataset.
-2. Keep the bundled sample CSV in the repository so the project is runnable immediately after clone.
-3. Share the full raw CSV separately through OneDrive, Google Drive, or Git LFS.
-4. Ask each teammate to place the full CSV in the project root if they need exact reproduction of the original notebook outputs.
-
-## Presentation Checklist For Teammates
-
-1. Start the backend.
-2. Start the frontend.
-3. Open the dashboard in the browser.
-4. Open `test.ipynb` in Jupyter or VS Code.
-5. If they need the exact full-data outputs, add the original `instagram_users_lifestyle.csv` before rerunning cells.
-
 ## Troubleshooting
 
 ### Backend fails on startup
@@ -221,8 +219,3 @@ This starts:
 - Install the kernel packages from `requirements-notebook.txt`.
 - Select the `.venv` interpreter manually.
 
-## Notes For Submission
-
-- `report.tex` is the final LaTeX report source.
-- The sample dataset is for portability and demo purposes.
-- The full dataset is required only if you want to reproduce the original large-scale run exactly.
