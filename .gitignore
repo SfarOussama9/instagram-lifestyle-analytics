@@ -27,3 +27,10 @@ dashboard/backend/app/artifacts/*
 
 Thumbs.db
 .DS_Store
+# Not part of the project
+*.exe
+dashboard/frontend/public/images/*.pdf
+.vscode/
+
+# Stale training artifact outside the backend
+dashboard/app/
